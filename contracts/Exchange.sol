@@ -189,7 +189,7 @@ contract Exchange {
         return users[msg.sender].owned_assets;
     }
 
-    function getAssetClaimString(uint _id) external view {
+    function getAssetClaimString(uint _id) external view returns (string) {
         return assets[_id].claim_string;
     }
 }
