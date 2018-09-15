@@ -10,8 +10,8 @@ contract Exchange {
 
     constructor() public {
         assets.push(Asset(0, 0, ""));
-        uint[] storage my_items;
-        uint[] storage their_items;
+        uint[] memory my_items;
+        uint[] memory their_items;
         offers.push(TradeOffer(0, 0, my_items, their_items, TradeOfferState.CANCELLED));
     }
 
