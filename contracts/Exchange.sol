@@ -59,9 +59,15 @@ contract Exchange {
         // should make the magic (exchange the items) or throw IF:
         // - offer_recipient is not sender
         // - items do not exist anymore in either inventories
+        // - offer must be PENDING
     }
 
-    function decli
+    function declineTradeOffer(uint _offer_id) external {
+        // should decline pending trade offer or throw IF:
+        // - _offer_id does not exist
+        // - offer's recipient is not msg.sender
+        // - offer is not PENDING
+    }
 
     function getUserInventory(address _address) external view returns (uint[]) {
         return users[_address].owned_assets;
