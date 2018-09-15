@@ -188,4 +188,8 @@ contract Exchange {
     function getMyInventory() external view returns (uint[]) {
         return users[msg.sender].owned_assets;
     }
+
+    function getAssetClaimString(uint _id) external view {
+        return assets[_id].claim_string;
+    }
 }
