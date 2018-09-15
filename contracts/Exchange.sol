@@ -8,6 +8,11 @@ contract Exchange {
     event NewTradeOffer(uint id, address sender, address receiver, uint[] my_items, uint[] their_items);
     event ModifyTradeOffer(uint id, TradeOfferState state);
 
+    constructor() {
+        assets.push(Asset(0, 0, ""));
+        assets.push(TradeOffer(0, 0, [], [], TradeOfferState.CANCELLED));
+    }
+
     enum TradeOfferState {
         PENDING,
         CANCELLED,
@@ -22,8 +27,8 @@ contract Exchange {
     }
 
     struct TradeOffer {
-        address offer_sender;
-        address offer_recipient;
+        address sender;
+        address recipient;
         uint[] my_items;
         uint[] their_items;
         TradeOfferState state;
@@ -97,16 +102,30 @@ contract Exchange {
         return assets[_id].data;
     }
 
-    function sendTradeOffer(address _partner, uint[] _my_items, uint[] _their_items) external {
-        // should make a new trade offer or throw IF:
-        // - sender address does not have an item listen in _my_items
-        // - partner address does not have an item listen in _their_items
-        // - you have a pending trade offer
+    // should make a new trade offer or throw IF:
+    // - sender address does not have an item listen in _my_items
+    // - partner address does not have an item listen in _their_items
+    // - you have a pending trade offer
+
+    function sendTradeOffer(address _partner, uint[] _my_items, uint[] _their_items) external returns (uint) {
+        require(users[msg.sender].pending_offer_id == 0, "You already have one trade offer. Cancel it first to make a new one.");
+        for(uint i = 0; i < _my_items.length; i++) {
+            require(assets[_my_items[i]].owner == msg.sender, "You attempted to trade item(s) which you do not own.");
+        }
+        for(i = 0; i < _their_items.length; i++) {
+            require(assets[_their_items[i]].owner == _partner, "You attempted to request item(s) which your partner does not own.");
+        }
+        offers.push(TradeOffer(msg.sender, _partner, _my_items, _their_items, TradeOfferState.PENDING));
+        users[msg.sender].pending_offer_id = offers.length - 1;
+        return offers.length - 1;
     }
 
+    // should cancel pending trade offer or throw IF:
+    // - sender has no pending tradeoffer
     function cancelTradeOffer() external {
-        // should cancel pending trade offer or throw IF:
-        // - sender has no pending tradeoffer
+        require(users[msg.sender].pending_offer_id != 0, "You have no pending trade offer.");
+        offers[users[msg.sender].pending_offer_id].state = TradeOfferState.CANCELLED;
+        users[msg.sender].pending_offer_id = 0;
     }
 
     function acceptTradeOffer(uint _offer_id) external {
@@ -116,11 +135,15 @@ contract Exchange {
         // - offer must be PENDING
     }
 
+    // should decline pending trade offer or throw IF:
+    // - _offer_id does not exist
+    // - offer's recipient is not msg.sender
+    // - offer is not PENDING
     function declineTradeOffer(uint _offer_id) external {
-        // should decline pending trade offer or throw IF:
-        // - _offer_id does not exist
-        // - offer's recipient is not msg.sender
-        // - offer is not PENDING
+        require(offers[_offer_id].recipient == msg.sender, "You are not the recipient of given trade offer.");
+        require(offers[_offer_id].state == TradeOfferState.PENDING, "This offer is not pending.");
+        offers[_offer_id].state = TradeOfferState.DECLINED;
+        users[offers[_offer_id].sender].pending_offer_id = 0;
     }
 
     function getUserInventory(address _address) external view returns (uint[]) {
