@@ -2,6 +2,12 @@ pragma solidity ^0.4.23;
 
 contract Exchange {
 
+    event AssetAssign(uint id, address user, address emitter, string data);
+    event AssetBurn(uint id);
+    event AssetMove(uint id, address from, address to);
+    event NewTradeOffer(uint id, address sender, address receiver, uint[] my_items, uint[] their_items);
+    event ModifyTradeOffer(uint id, TradeOfferState state);
+
     enum TradeOfferState {
         PENDING,
         CANCELLED,
@@ -19,7 +25,7 @@ contract Exchange {
         address offer_recipient;
         uint[] my_items;
         uint[] their_items;
-        
+        TradeOfferState state;
     }
 
     struct User {
