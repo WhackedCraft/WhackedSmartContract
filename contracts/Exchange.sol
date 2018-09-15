@@ -16,7 +16,8 @@ contract Exchange {
     }
 
     struct Asset {
-        address asset_emitter;
+        address emitter;
+        address owner;
         string data;
     }
 
@@ -38,15 +39,61 @@ contract Exchange {
 
     mapping(address => User) users;
 
-    function assign(address _user, string _data) external {
-        // gives a new asset with _data string to _user
-        // asset_emitter equals msg.sender
+    // gives a new asset with _data string to _user
+    // asset_emitter equals msg.sender
+    function assign(address _owner, string _data) external {
+        assets.push(Asset(msg.sender, _owner, _data));
+        users[_owner].owned_assets.push(assets.length - 1);
     }
+    
+    // burns the asset with given id or throws IF:
+    // - the asset emitter is not msg.sender
+    // - the asset with said id does not exist
 
     function burn(uint _id) external {
-        // burns the asset with given id or throws IF:
-        // - the asset emitter is not msg.sender
-        // - the asset with said id does not exist
+
+        require(assets[_id].emitter == msg.sender, "In order to burn an asset, you need to be the one who emitted it.");
+        
+        for(uint i = 0; i < users[assets[_id].owner].owned_assets.length; i++)
+        {
+            if(users[assets[_id].owner].owned_assets[i] == _id) {
+                removeUserAsset(assets[_id].owner, _id);
+            }
+        }
+
+        delete assets[_id];
+
+    }
+
+    function removeUserAsset(address _user, uint _id) internal {
+
+        uint index = users[_user].owned_assets.length;
+        
+        for(uint i = 0; i < users[_user].owned_assets.length; i++) {
+            if(users[_user].owned_assets[i] == _id) {
+                index = _id;
+                break;
+            }
+        }
+
+        if (index >= users[_user].owned_assets.length) return;
+
+        for (i = index; i < users[_user].owned_assets.length-1; i++){
+            users[_user].owned_assets[i] = users[_user].owned_assets[i+1];
+        }
+        users[_user].owned_assets.length--;
+    }
+
+    function getAssetEmmiter(uint _id) external view returns (address) {
+        return assets[_id].emitter;
+    }
+
+    function getAssetOwner(uint _id) external view returns (address) {
+        return assets[_id].owner;
+    }
+
+    function getAssetData(uint _id) external view returns (string) {
+        return assets[_id].data;
     }
 
     function sendTradeOffer(address _partner, uint[] _my_items, uint[] _their_items) external {
