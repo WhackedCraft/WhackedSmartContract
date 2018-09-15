@@ -128,11 +128,25 @@ contract Exchange {
         users[msg.sender].pending_offer_id = 0;
     }
 
+    // should make the magic (exchange the items) or throw IF:
+    // - offer_recipient is not sender
+    // - items do not exist anymore in either inventories
+    // - offer must be PENDING
     function acceptTradeOffer(uint _offer_id) external {
-        // should make the magic (exchange the items) or throw IF:
-        // - offer_recipient is not sender
-        // - items do not exist anymore in either inventories
-        // - offer must be PENDING
+        require(offers[_offer_id].recipient == msg.sender, "You are not the recipient of given trade offer.");
+        require(offers[_offer_id].state == TradeOfferState.PENDING, "This offer is not pending.");
+        for(uint i = 0; i < offers[_offer_id].my_items.length; i++) {
+            require(assets[offers[_offer_id].my_items[i]].owner == offers[_offer_id].sender, "Offer sender no longer owns mentioned items.");
+        }
+        for(i = 0; i < offers[_offer_id].their_items.length; i++) {
+            require(assets[offers[_offer_id].their_items[i]].owner == msg.sender, "You no longer own mentioned items.");
+        }
+        for(i = 0; i < offers[_offer_id].my_items.length; i++) {
+            assets[offers[_offer_id].my_items[i]].owner = msg.sender;
+        }
+        for(i = 0; i < offers[_offer_id].their_items.length; i++) {
+            assets[offers[_offer_id].their_items[i]].owner = offers[_offer_id].sender;
+        }
     }
 
     // should decline pending trade offer or throw IF:
