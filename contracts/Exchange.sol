@@ -44,12 +44,12 @@ contract Exchange {
     function assign(address _owner, string _data) external {
         assets.push(Asset(msg.sender, _owner, _data));
         users[_owner].owned_assets.push(assets.length - 1);
+        emit AssetAssign(assets.length - 1, _owner, msg.sender, _data);
     }
     
     // burns the asset with given id or throws IF:
     // - the asset emitter is not msg.sender
     // - the asset with said id does not exist
-
     function burn(uint _id) external {
 
         require(assets[_id].emitter == msg.sender, "In order to burn an asset, you need to be the one who emitted it.");
@@ -62,6 +62,7 @@ contract Exchange {
         }
 
         delete assets[_id];
+        emit AssetBurn(_id);
 
     }
 
