@@ -5,11 +5,12 @@ contract Exchange {
     event AssetAssign(uint id, address user, address emitter, string data);
     event AssetBurn(uint id);
     event AssetMove(uint id, address from, address to);
+    event AssetClaimStringSet(uint id, string claim_code);
     event NewTradeOffer(uint id, address sender, address receiver, uint[] my_items, uint[] their_items);
     event ModifyTradeOffer(uint id, TradeOfferState state);
 
     constructor() public {
-        assets.push(Asset(0, 0, ""));
+        assets.push(Asset(0, 0, "", ""));
         uint[] memory my_items;
         uint[] memory their_items;
         offers.push(TradeOffer(0, 0, my_items, their_items, TradeOfferState.CANCELLED));
@@ -26,6 +27,7 @@ contract Exchange {
         address emitter;
         address owner;
         string data;
+        string claim_string;
     }
 
     struct TradeOffer {
@@ -49,7 +51,7 @@ contract Exchange {
     // gives a new asset with _data string to _user
     // asset_emitter equals msg.sender
     function assign(address _owner, string _data) external {
-        assets.push(Asset(msg.sender, _owner, _data));
+        assets.push(Asset(msg.sender, _owner, _data, ""));
         users[_owner].owned_assets.push(assets.length - 1);
         emit AssetAssign(assets.length - 1, _owner, msg.sender, _data);
     }
@@ -114,6 +116,7 @@ contract Exchange {
         }
         offers.push(TradeOffer(msg.sender, _partner, _my_items, _their_items, TradeOfferState.PENDING));
         users[msg.sender].pending_offer_id = offers.length - 1;
+        emit NewTradeOffer(offers.length - 1, msg.sender, _partner, _my_items, _their_items);
         return offers.length - 1;
     }
 
@@ -122,6 +125,7 @@ contract Exchange {
     function cancelTradeOffer() external {
         require(users[msg.sender].pending_offer_id != 0, "You have no pending trade offer.");
         offers[users[msg.sender].pending_offer_id].state = TradeOfferState.CANCELLED;
+        emit ModifyTradeOffer(users[msg.sender].pending_offer_id, TradeOfferState.CANCELLED);
         users[msg.sender].pending_offer_id = 0;
     }
 
@@ -139,17 +143,21 @@ contract Exchange {
             require(assets[offers[_offer_id].their_items[i]].owner == msg.sender, "You no longer own mentioned items.");
         }
         for(i = 0; i < offers[_offer_id].my_items.length; i++) {
-            setItemOwner(offers[_offer_id].my_items[i], msg.sender);
+            setAssetOwner(offers[_offer_id].my_items[i], msg.sender);
         }
         for(i = 0; i < offers[_offer_id].their_items.length; i++) {
-            setItemOwner(offers[_offer_id].their_items[i], offers[_offer_id].sender);
+            setAssetOwner(offers[_offer_id].their_items[i], offers[_offer_id].sender);
         }
+        users[offers[_offer_id].sender].pending_offer_id = 0;
+        emit ModifyTradeOffer(_offer_id, TradeOfferState.ACCEPTED);
     }
 
-    function setItemOwner(uint _id, address _new_owner) internal {
+    function setAssetOwner(uint _id, address _new_owner) internal {
+        emit AssetMove(_id, assets[_id].owner, _new_owner);
         removeUserAsset(assets[_id].owner, _id);
         assets[_id].owner = _new_owner;
-        users[_new_owner].owned_items.push(_id);
+        assets[_id].claim_string = "";
+        users[_new_owner].owned_assets.push(_id);
     }
 
     // should decline pending trade offer or throw IF:
@@ -161,6 +169,15 @@ contract Exchange {
         require(offers[_offer_id].state == TradeOfferState.PENDING, "This offer is not pending.");
         offers[_offer_id].state = TradeOfferState.DECLINED;
         users[offers[_offer_id].sender].pending_offer_id = 0;
+        emit ModifyTradeOffer(_offer_id, TradeOfferState.DECLINED);
+    }
+
+    // set item claim string or throw IF:
+    // - msg.sender is not asset owner
+    function setAssetClaimString(uint _id, string _claim_string) external {
+        require(assets[_id].owner == msg.sender, "Only asset owner can set a claim string.");
+        assets[_id].claim_string = _claim_string;
+        emit AssetClaimStringSet(_id, _claim_string);
     }
 
     function getUserInventory(address _address) external view returns (uint[]) {
