@@ -61,12 +61,7 @@ contract Exchange {
 
         require(assets[_id].emitter == msg.sender, "In order to burn an asset, you need to be the one who emitted it.");
         
-        for(uint i = 0; i < users[assets[_id].owner].owned_assets.length; i++)
-        {
-            if(users[assets[_id].owner].owned_assets[i] == _id) {
-                removeUserAsset(assets[_id].owner, _id);
-            }
-        }
+        removeUserAsset(assets[_id].owner, _id);
 
         delete assets[_id];
         emit AssetBurn(_id);
@@ -79,7 +74,7 @@ contract Exchange {
         
         for(uint i = 0; i < users[_user].owned_assets.length; i++) {
             if(users[_user].owned_assets[i] == _id) {
-                index = _id;
+                index = i;
                 break;
             }
         }
@@ -144,11 +139,17 @@ contract Exchange {
             require(assets[offers[_offer_id].their_items[i]].owner == msg.sender, "You no longer own mentioned items.");
         }
         for(i = 0; i < offers[_offer_id].my_items.length; i++) {
-            assets[offers[_offer_id].my_items[i]].owner = msg.sender;
+            setItemOwner(offers[_offer_id].my_items[i], msg.sender);
         }
         for(i = 0; i < offers[_offer_id].their_items.length; i++) {
-            assets[offers[_offer_id].their_items[i]].owner = offers[_offer_id].sender;
+            setItemOwner(offers[_offer_id].their_items[i], offers[_offer_id].sender);
         }
+    }
+
+    function setItemOwner(uint _id, address _new_owner) internal {
+        removeUserAsset(assets[_id].owner, _id);
+        assets[_id].owner = _new_owner;
+        users[_new_owner].owned_items.push(_id);
     }
 
     // should decline pending trade offer or throw IF:
