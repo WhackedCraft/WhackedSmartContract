@@ -5,7 +5,8 @@ contract Exchange {
     enum TradeOfferState {
         PENDING,
         CANCELLED,
-        ACCEPTED
+        ACCEPTED,
+        DECLINED
     }
 
     struct Asset {
@@ -59,6 +60,8 @@ contract Exchange {
         // - offer_recipient is not sender
         // - items do not exist anymore in either inventories
     }
+
+    function decli
 
     function getUserInventory(address _address) external view returns (uint[]) {
         return users[_address].owned_assets;
