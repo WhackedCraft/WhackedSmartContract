@@ -31,7 +31,7 @@ contract Exchange {
 
     mapping(address => User) users;
 
-    function emit(address _user, string _data) external {
+    function assign(address _user, string _data) external {
         // gives a new asset with _data string to _user
         // asset_emitter equals msg.sender
     }
