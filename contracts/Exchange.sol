@@ -8,9 +8,11 @@ contract Exchange {
     event NewTradeOffer(uint id, address sender, address receiver, uint[] my_items, uint[] their_items);
     event ModifyTradeOffer(uint id, TradeOfferState state);
 
-    constructor() {
+    constructor() public {
         assets.push(Asset(0, 0, ""));
-        assets.push(TradeOffer(0, 0, [], [], TradeOfferState.CANCELLED));
+        uint[] storage my_items;
+        uint[] storage their_items;
+        offers.push(TradeOffer(0, 0, my_items, their_items, TradeOfferState.CANCELLED));
     }
 
     enum TradeOfferState {
