@@ -148,6 +148,7 @@ contract Exchange {
         for(i = 0; i < offers[_offer_id].their_items.length; i++) {
             setAssetOwner(offers[_offer_id].their_items[i], offers[_offer_id].sender);
         }
+        offers[_offer_id].state = TradeOfferState.ACCEPTED;
         users[offers[_offer_id].sender].pending_offer_id = 0;
         emit ModifyTradeOffer(_offer_id, TradeOfferState.ACCEPTED);
     }
