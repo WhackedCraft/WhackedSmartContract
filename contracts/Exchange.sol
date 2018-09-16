@@ -89,7 +89,7 @@ contract Exchange {
         users[_user].owned_assets.length--;
     }
 
-    function getAssetEmmiter(uint _id) external view returns (address) {
+    function getAssetEmitter(uint _id) external view returns (address) {
         return assets[_id].emitter;
     }
 
@@ -192,4 +192,33 @@ contract Exchange {
     function getAssetClaimString(uint _id) external view returns (string) {
         return assets[_id].claim_string;
     }
+
+    function getMySentTradeOfferId() external view returns (uint) {
+        return users[msg.sender].pending_offer_id;
+    }
+
+    function getUserSentTradeOfferId(address _address) external view returns (uint) {
+        return users[_address].pending_offer_id;
+    }
+
+    function getTradeOfferSender(uint _id) external view returns (address) {
+        return offers[_id].sender;
+    }
+
+    function getTradeOfferRecipient(uint _id) external view returns (address) {
+        return offers[_id].recipient;
+    }
+
+    function getTradeOfferSenderItems(uint _id) external view returns (uint[]) {
+        return offers[_id].my_items;
+    }
+
+    function getTradeOfferRecipientItems(uint _id) external view returns (uint[]) {
+        return offers[_id].their_items;
+    }
+
+    function getTradeOfferState(uint _id) external view returns (TradeOfferState) {
+        return offers[_id].state;
+    }
+
 }
