@@ -39,7 +39,6 @@ contract Exchange {
     }
 
     struct User {
-        uint[] owned_assets;
         uint pending_offer_id;
     }
 
@@ -52,7 +51,6 @@ contract Exchange {
     // asset_emitter equals msg.sender
     function assign(address _owner, string _data) external {
         assets.push(Asset(msg.sender, _owner, _data, ""));
-        users[_owner].owned_assets.push(assets.length - 1);
         emit AssetAssign(assets.length - 1, _owner, msg.sender, _data);
     }
     
@@ -62,31 +60,10 @@ contract Exchange {
     function burn(uint _id) external {
 
         require(assets[_id].emitter == msg.sender, "In order to burn an asset, you need to be the one who emitted it.");
-        
-        removeUserAsset(assets[_id].owner, _id);
 
         delete assets[_id];
         emit AssetBurn(_id);
 
-    }
-
-    function removeUserAsset(address _user, uint _id) internal {
-
-        uint index = users[_user].owned_assets.length;
-        
-        for(uint i = 0; i < users[_user].owned_assets.length; i++) {
-            if(users[_user].owned_assets[i] == _id) {
-                index = i;
-                break;
-            }
-        }
-
-        if (index >= users[_user].owned_assets.length) return;
-
-        for (i = index; i < users[_user].owned_assets.length-1; i++){
-            users[_user].owned_assets[i] = users[_user].owned_assets[i+1];
-        }
-        users[_user].owned_assets.length--;
     }
 
     function getAssetEmitter(uint _id) external view returns (address) {
@@ -155,10 +132,8 @@ contract Exchange {
 
     function setAssetOwner(uint _id, address _new_owner) internal {
         emit AssetMove(_id, assets[_id].owner, _new_owner);
-        removeUserAsset(assets[_id].owner, _id);
         assets[_id].owner = _new_owner;
         assets[_id].claim_string = "";
-        users[_new_owner].owned_assets.push(_id);
     }
 
     // should decline pending trade offer or throw IF:
@@ -179,14 +154,6 @@ contract Exchange {
         require(assets[_id].owner == msg.sender, "Only asset owner can set a claim string.");
         assets[_id].claim_string = _claim_string;
         emit AssetClaimStringSet(_id, _claim_string);
-    }
-
-    function getUserInventory(address _address) external view returns (uint[]) {
-        return users[_address].owned_assets;
-    }
-
-    function getMyInventory() external view returns (uint[]) {
-        return users[msg.sender].owned_assets;
     }
 
     function getAssetClaimString(uint _id) external view returns (string) {
