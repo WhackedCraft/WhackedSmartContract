@@ -107,6 +107,7 @@ contract Exchange {
     // - you have a pending trade offer
 
     function sendTradeOffer(address _partner, uint[] _my_items, uint[] _their_items) external returns (uint) {
+        require(!(_my_items.length == 0 && _their_items.length == 0), "Offer cannot be empty.");
         require(users[msg.sender].pending_offer_id == 0, "You already have one trade offer. Cancel it first to make a new one.");
         for(uint i = 0; i < _my_items.length; i++) {
             require(assets[_my_items[i]].owner == msg.sender, "You attempted to trade item(s) which you do not own.");
@@ -218,7 +219,6 @@ contract Exchange {
     }
 
     function getTradeOfferState(uint _id) external view returns (TradeOfferState) {
-        return offers[_id].state;
-    }
+        return offers[_id].state;    }
 
 }
