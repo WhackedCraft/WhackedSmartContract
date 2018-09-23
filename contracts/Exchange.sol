@@ -201,24 +201,20 @@ contract Exchange {
         return users[_address].pending_offer_id;
     }
 
-    function getTradeOfferSender(uint _id) external view returns (address) {
-        return offers[_id].sender;
-    }
-
-    function getTradeOfferRecipient(uint _id) external view returns (address) {
-        return offers[_id].recipient;
-    }
-
-    function getTradeOfferSenderItems(uint _id) external view returns (uint[]) {
-        return offers[_id].my_items;
-    }
-
-    function getTradeOfferRecipientItems(uint _id) external view returns (uint[]) {
-        return offers[_id].their_items;
-    }
-
-    function getTradeOfferState(uint _id) external view returns (TradeOfferState) {
-        return offers[_id].state;
+    function getTradeOffer(uint _id) external view
+        returns (
+            address sender,
+            address recipient,
+            uint[] sender_items,
+            uint[] recipient_items,
+            TradeOfferState state
+        )
+    {
+        sender = offers[_id].sender;
+        recipient = offers[_id].recipient;
+        sender_items = offers[_id].my_items;
+        recipient_items = offers[_id].their_items;
+        state = offers[_id].state;
     }
 
 }
